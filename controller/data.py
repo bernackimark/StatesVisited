@@ -1,45 +1,36 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from db.db import get_db_session
 from db.models import User as UserTable, UserState as UserStateTable
 
 
-def get_all_data() -> "Data":
-    with get_db_session() as s:
-        data = s.query(UserTable.name, UserTable.home_state_code,
-                       UserStateTable.data).filter(UserTable.id == UserStateTable.user_id).all()
-    all_data = []
-    for name, home_state, states in data:
-        visited = [VisitedState(code, d['visited_on'], d['added_on']) for code, d in states.items()]
-        all_data.append(DataRow(name, home_state, visited))
-    return Data(all_data)
-
 @dataclass
 class VisitedState:
+    """Each state from the array of states from the db user_state.data column (JSON)"""
     state_code: str
     year: int
     added_on: str
 
 @dataclass
 class DataRow:
-    """An object with user's name, user home state code, and a list of visited states"""
+    """A convenience object with select elements from the user & user_state tables"""
+    user_id: int
     name: str
     home_state_code: str
-    visited_states: list[VisitedState]
+    state_data: list[VisitedState]
 
     @property
     def state_cnt(self) -> int:
-        return len(self.visited_states)
+        return len(self.state_data)
 
-@dataclass
-class Data:
-    """A list of data rows, on which to filter & group data"""
-    data: list[DataRow] = field(default_factory=get_all_data)
 
-    @property
-    def users(self) -> list[str]:
-        return sorted([r.name for r in self.data])
-
-    @property
-    def users_and_state_counts(self) -> list[dict[str: int]]:
-        return [{'name': r.name, 'home_state': r.home_state_code, 'state_cnt': r.state_cnt} for r in self.data]
+def get_all_data() -> list[DataRow]:
+    """Get all db records, joining user & user_state & returning some of the columns"""
+    with get_db_session() as s:
+        data = s.query(UserTable.id, UserTable.name, UserTable.home_state_code,
+                       UserStateTable.data).filter(UserTable.id == UserStateTable.user_id).all()
+    all_data = []
+    for user_id, name, home_state, states in data:
+        visited = [VisitedState(code, d['visited_on'], d['added_on']) for code, d in states.items()]
+        all_data.append(DataRow(user_id, name, home_state, visited))
+    return all_data

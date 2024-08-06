@@ -23,10 +23,6 @@ class User:
         if not self.state_data:
             self.state_data = {}
 
-    @property
-    def state_count(self) -> int:
-        return len(self.state_data)
-
 
 def create_user(email: str, name: str, home_state_code: str) -> int | None:
     """Creates a record in both the user & user_state tables.
