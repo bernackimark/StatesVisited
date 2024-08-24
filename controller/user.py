@@ -1,59 +1,56 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
-from uuid import uuid4
 
-from db.db import get_db_session
-from db.models import User as UserTable, UserState as UserStateTable
-
-PWORD_PLACEHOLDER = 'abc123'
+from db_layer.db import get_db_session
+from db_layer.models import User as UserTable
 
 
 @dataclass
 class User:
-    id: uuid4
     email: str
     name: str
     home_state_code: str
-    hashed_password: str
-    state_data: dict
-    is_active: bool = True
-    last_login: datetime = datetime.now()
+    states: dict = field(default_factory=dict)
 
-    def __post_init__(self):
-        if not self.state_data:
-            self.state_data = {}
+    @property
+    def state_cnt(self) -> int:
+        return len(self.states)
+
+    def has_visited(self, state_code: str) -> bool:
+        return state_code in self.states
 
 
-def create_user(email: str, name: str, home_state_code: str) -> int | None:
-    """Creates a record in both the user & user_state tables.
-    If the user already exists, None is returned.  If a user is created, 1 is returned."""
-    user = UserTable(email=email, name=name, home_state_code=home_state_code, hashed_password=PWORD_PLACEHOLDER)
+def create_user(email: str, name: str, home_state_code: str) -> User | None:
+    """Creates a record in both the user & table.
+    If the user already exists, None is returned.  If a user is created, a User dataclass is returned."""
+    user = UserTable(email=email, name=name, home_state_code=home_state_code)
 
     with get_db_session() as s:
-        already_exists = s.query(UserTable).filter(UserTable.email == email).one_or_none()
-        if already_exists:
+        if s.get(UserTable, email):
             return None
 
         s.add(user)
         s.commit()
-        user_id = s.query(UserTable.id).filter(UserTable.email == email).scalar()
-        user_state = UserStateTable(user_id=user_id, data={})
-        s.add(user_state)
-        s.commit()
-        return 1
+        return User(email=email, name=name, home_state_code=home_state_code, states={})
 
-def modify_user(user_id: int, name: str, home_state_code: str):
+def modify_user(email: str, name: str, home_state_code: str):
     with get_db_session() as s:
-        user = s.query(UserTable).get(user_id)
+        user = s.get(UserTable, email)
         user.name = name
         user.home_state_code = home_state_code
         s.commit()
 
-def get_user(user_id: int) -> User | None:
+def get_user(email: str) -> User | None:
     with get_db_session() as s:
-        data = s.query(UserTable, UserStateTable).filter(UserTable.id == UserStateTable.user_id,
-                                                         UserTable.id == user_id).one_or_none()
-        if data:
-            u, us = data
-            return User(u.id, u.email, u.name, u.home_state_code, u.hashed_password, us.data, u.is_active, u.last_login)
+        u: UserTable = s.get(UserTable, email)
+        if not u:
+            return None
+        u.last_login = datetime.now()
+        s.commit()
+        return User(email=u.email, name=u.name, home_state_code=u.home_state_code, states=u.states)
 
+def get_all_users() -> list[User]:
+    """Get all is_active users from db, return User dataclass objects"""
+    with get_db_session() as s:
+        data = s.query(UserTable).filter(UserTable.is_active).all()
+        return [User(email=r.email, name=r.name, home_state_code=r.home_state_code, states=r.states) for r in data]

@@ -17,3 +17,9 @@ def states_list() -> list[State]:
 def states_by_coord() -> dict[tuple[int, int]: State]:
     """Returns {(6, 6): State(code='AL', name='Alabama', (3, 2): State(code='WY', name='Wyoming', coord=(3, 2))}"""
     return {s.coord: s for s in states_list()}
+
+def state_names() -> list[str]:
+    return sorted([s.name for s in states_list()])
+
+def get_state_code_from_name(state_name: str) -> str:
+    return next(s.code for s in states_list() if s.name == state_name)
