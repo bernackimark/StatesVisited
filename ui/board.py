@@ -10,7 +10,7 @@ st.markdown(
     """
     <style>
         div[data-testid="stHorizontalBlock"] {
-        gap: 0.5rem !important;
+        gap: 0.2rem !important;
         }
     </style>
     """,
@@ -45,7 +45,7 @@ class Board:
         if not self.states.get(state_code):
             return {'label': state_code, 'type': 'secondary'}
         if self.state_visit_cnt(state_code) < self.map_cnt:
-            return {'label': f':gray-background[{state_code}]', 'type': 'secondary'}
+            return {'label': f':gray[{state_code}]', 'type': 'secondary'}
         return {'label': state_code, 'type': 'primary'}
 
     def display_board(self):

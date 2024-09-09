@@ -33,11 +33,11 @@ if st.session_state.get('refresh_data') is True:
 all_data: list[User] = get_data()
 
 def legend(board_mode: str):
-    if board_mode == 'view':
+    if board_mode == VIEW_LABEL:
         co1, co2, co3, co4, co5, co6 = st.columns([2, 6, 2, 6, 2, 6])
         co1.button('ST')
         co2.write('no one has visited')
-        co3.button(':gray-background[ST]')
+        co3.button(':gray[ST]')
         co4.write('some have visited')
         co5.button('ST', type='primary')
         co6.write('everyone has visited')
