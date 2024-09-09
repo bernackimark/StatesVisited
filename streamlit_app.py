@@ -77,7 +77,7 @@ st.divider()
 if st.session_state.board_mode == EDIT_LABEL:
     st.session_state['user_maps']: list[User] = [r for r in all_data if r.email == st.session_state.me.email]
 else:
-    name_items = [f'{r.name} ({r.home_state_code}) ({r.state_cnt})' for r in all_data]
+    name_items = sorted([f'{r.name} ({r.home_state_code}) ({r.state_cnt})' for r in all_data])
     st.session_state['viewing']: list[str] = col_viewing.multiselect('Viewing:', name_items,
                                                                      placeholder='Select a user to view their map.')
     viewer_names: list[str] = [name[:name.find('(') - 1] for name in st.session_state.get('viewing', default='')]
