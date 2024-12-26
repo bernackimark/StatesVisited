@@ -54,6 +54,7 @@ def login_screen():
                 st.error('You weren\'t found. Please create yourself by clicking "Create Me".')
             else:
                 st.session_state.me = user
+                st.session_state.mode = 'View'
                 st.session_state['viewing'] = f'{user.name} ({user.home_state_code}) ({user.state_cnt})'
                 st.success("Logging you in ...")
                 time.sleep(SLEEP_SECONDS)
