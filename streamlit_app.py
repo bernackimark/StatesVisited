@@ -114,7 +114,6 @@ def leaderboard():
     with col2:
         if sel_state := st.session_state.selected_state:
             st.subheader(f'{sel_state.name} Visitors')
-            # TODO: this should be sensitive to the selected user maps
             st.dataframe([{'name': r.name} for r in st.session_state.selected_user_maps if r.has_visited(sel_state.code)])
 
 
